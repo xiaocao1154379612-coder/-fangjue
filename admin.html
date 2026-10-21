@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方觉 Fonjue® — 内容后台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3EFE6;--ink:#17140F;--accent:#D9481C;--muted:#8B857A;--line:rgba(23,20,15,.14);--card:#EDE8DC;
+  --serif:"Noto Serif SC",serif;--sans:"Noto Sans SC",sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+header{display:flex;justify-content:space-between;align-items:center;padding:22px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:14px}
+.logo{font-family:var(--serif);font-weight:900;font-size:22px}
+.logo em{font-style:normal;font-size:12px;color:var(--muted);margin-left:8px;letter-spacing:.12em}
+h1{font-family:var(--serif);font-weight:900;font-size:clamp(28px,4vw,44px);margin:36px 0 6px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:32px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:28px;margin-bottom:28px}
+label{display:block;font-size:12px;letter-spacing:.16em;color:var(--muted);margin:18px 0 8px}
+label:first-child{margin-top:0}
+input[type=text],input[type=number],select,textarea{width:100%;padding:12px 14px;border:1px solid var(--line);
+  border-radius:6px;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--ink);outline:none;transition:border-color .25s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{min-height:110px;resize:vertical;line-height:1.8}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:680px){.row{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:999px;padding:12px 26px;
+  font-size:13px;letter-spacing:.12em;transition:.3s;cursor:pointer;font-family:var(--sans)}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#b93a12;transform:translateY(-1px)}
+.btn-d{background:var(--ink);color:var(--bg)}.btn-d:hover{background:#000}
+.btn-g{background:transparent;border:1px solid var(--line);color:var(--ink)}.btn-g:hover{border-color:var(--ink)}
+.btn-x{background:transparent;border:1px solid #e3b8a8;color:var(--accent);padding:7px 14px;font-size:12px}
+.btn-x:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;font-size:12px;letter-spacing:.14em;color:var(--muted);
+  padding:12px 10px;border-bottom:1px solid var(--line)}
+td{padding:14px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:#faf7ef}
+.cover{width:86px;height:60px;object-fit:cover;border-radius:4px;background:var(--card);display:block}
+.tag{font-size:11px;background:var(--card);border-radius:999px;padding:4px 12px;margin-right:6px;white-space:nowrap}
+.ops button{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:12px;margin-right:6px;cursor:pointer;transition:.25s}
+.ops button:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ops .del:hover{background:#b3261e;border-color:#b3261e}
+.empty{text-align:center;color:var(--muted);padding:60px 0;font-size:14px}
+.toast{position:fixed;bottom:28px;left:50%;transform:translate(-50%,80px);background:var(--ink);color:var(--bg);
+  padding:14px 28px;border-radius:999px;font-size:13px;letter-spacing:.1em;transition:transform .45s cubic-bezier(.2,.7,.2,1);z-index:999}
+.toast.show{transform:translate(-50%,0)}
+/* 登录 */
+#gate{position:fixed;inset:0;background:var(--ink);z-index:1000;display:flex;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+#gate.off{opacity:0;visibility:hidden}
+#gate .box{text-align:center;color:var(--bg)}
+#gate h2{font-family:var(--serif);font-weight:900;font-size:52px;margin-bottom:8px}
+#gate p{color:rgba(243,239,230,.55);font-size:13px;letter-spacing:.2em;margin-bottom:30px}
+#gate input{background:rgba(243,239,230,.08);border:1px solid rgba(243,239,230,.25);color:var(--bg);
+  border-radius:999px;padding:14px 26px;text-align:center;letter-spacing:.3em;width:260px;outline:none}
+#gate input:focus{border-color:var(--accent)}
+#gate .btn{margin-top:18px}
+#gate .err{color:#ff8a66;font-size:12px;margin-top:14px;height:16px}
+.hint{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.9;border-left:2px solid var(--accent);padding-left:12px}
+footer{padding:34px 0 44px;color:var(--muted);font-size:12px;letter-spacing:.12em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+/* ---------- 站点文字 ---------- */
+.tmbox{display:grid;grid-template-columns:80px 1fr 1fr 1.4fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.tmbox input{padding:8px 10px;font-size:13px}
+@media(max-width:560px){.tmbox{grid-template-columns:64px 1fr}}
+
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <h2>方 觉</h2>
+    <p>FONJUE STUDIO · 内容后台</p>
+    <input type="password" id="pwd" placeholder="输入管理密码" onkeydown="if(event.key==='Enter')login()">
+    <br><button class="btn btn-p" onclick="login()">进入后台</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="logo">方觉<em>FONJUE® ADMIN</em></div>
+    <div style="display:flex;gap:10px">
+      <a class="btn btn-g" href="index.html" target="_blank">查看网站 ↗</a>
+      <button class="btn btn-d" onclick="logout()">退出</button>
+    </div>
+  </header>
+
+  <h1>案例管理</h1>
+  <p class="sub">添加、编辑、删除首页展示的案例作品。数据保存在当前浏览器，换电脑前请先导出备份。</p>
+
+  <div class="panel">
+    <div style="font-family:var(--serif);font-weight:700;font-size:20px;margin-bottom:6px">站点素材与背景</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">上传后回主页刷新即生效；不上传则使用内置艺术底图。建议横屏图宽 ≥2000px，竖屏图宽 ≥1200px。</div>
+    <div id="bgRows"></div>
+    <div style="border-top:1px solid var(--line);margin-top:8px;padding-top:4px" id="qrRows"></div>
+    <div style="border-top:1px solid var(--line);margin-top:8px;padding-top:4px" id="plRows"></div>
+    <div style="display:flex;gap:10px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">
+      <div style="min-width:150px;font-size:13px">联系电话</div>
+      <input class="ad-in" style="max-width:240px" id="adPhone" placeholder="如 029-8888-6666">
+      <button class="btn btn-g" type="button" onclick="savePhone()">保存</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">
+      <div style="min-width:150px;font-size:13px">联系邮箱</div>
+      <input class="ad-in" style="max-width:240px" id="adEmail" placeholder="如 hello@fonjue.design">
+      <button class="btn btn-g" type="button" onclick="saveEmail()">保存</button>
+    </div>
+  </div>
+
+<div class="panel">
+    <div id="formTitle" style="font-family:var(--serif);font-weight:700;font-size:20px;margin-bottom:6px">＋ 新增案例</div>
+    <input type="hidden" id="f_id">
+    <div class="row">
+      <div><label>案例名称 *</label><input type="text" id="f_title" placeholder="如：山雾茶饮"></div>
+      <div><label>客户名称</label><input type="text" id="f_client" placeholder="如：山雾 SHANWU"></div>
+      <div><label>年份</label><input type="number" id="f_year" placeholder="2026"></div>
+    </div>
+    <div class="row">
+      <div><label>分类 *</label>
+        <select id="f_cat">
+          <option>品牌识别</option><option>包装设计</option><option>餐饮品牌</option>
+          <option>文创品牌</option><option>文化空间</option><option>科技品牌</option>
+          <option value="__new">＋ 新建分类…</option>
+        </select>
+      </div>
+      <div id="newCatBox" style="display:none"><label>新分类名称</label><input type="text" id="f_newcat" placeholder="输入新分类"></div>
+      <div><label>标签（逗号分隔）</label><input type="text" id="f_tags" placeholder="品牌识别, 包装设计"></div>
+    </div>
+    <label>案例描述</label>
+    <textarea id="f_desc" placeholder="一句话讲清楚这个项目做了什么、带来了什么效果…"></textarea>
+    <label>详细介绍（点进案例后的详情页内容，空行分段：背景 / 策略 / 成果）</label>
+    <textarea id="f_detail" style="min-height:150px" placeholder="第一段：背景洞察&#10;&#10;第二段：设计策略&#10;&#10;第三段：项目成果"></textarea>
+    <label>细节图片（案例详情页画廊展示，数量不限，不上传则自动生成）</label>
+    <div id="g_thumbs" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+    <input type="file" id="f_gallery" accept="image/*" multiple style="display:none" onchange="pickGallery(this)">
+    <button class="btn btn-g" type="button" style="margin-top:10px" onclick="document.getElementById('f_gallery').click()">＋ 添加细节图片</button>
+    <label>封面图（不上传则自动生成艺术封面）</label>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <img class="cover" id="f_preview" style="display:none">
+      <div>
+        <input type="file" id="f_img" accept="image/*" style="display:none" onchange="pickImg(this)">
+        <button class="btn btn-g" onclick="document.getElementById('f_img').click()">选择图片</button>
+        <button class="btn btn-x" id="f_clearImg" style="display:none" onclick="clearImg()">移除图片</button>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">建议尺寸 ≥1200×900，会自动压缩存为 Base64</div>
+      </div>
+    </div>
+    <div style="margin-top:26px;display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="saveCase()">保存案例</button>
+      <button class="btn btn-g" onclick="resetForm()">清空表单</button>
+    </div>
+  </div>
+
+  
+  <div class="panel">
+    <div style="font-family:var(--serif);font-weight:700;font-size:20px;margin-bottom:6px">团队介绍</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">成员数量不限；点头像可更换照片，改完即生效，回主站刷新查看。</div>
+    <div id="teamRows"></div>
+    <button class="btn btn-g" type="button" onclick="addTeam()">＋ 添加成员</button>
+  </div>
+
+<div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+      <div style="font-family:var(--serif);font-weight:700;font-size:20px">案例列表（<span id="cnt">0</span>）</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-p" onclick="exportSite()" title="把当前所有内容写进 index.html，上传 GitHub 后所有人可见">⬇ 导出整站（发朋友用）</button>
+        <button class="btn btn-g" onclick="exportJSON()">⬇ 导出备份</button>
+        <button class="btn btn-g" onclick="document.getElementById('importFile').click()">⬆ 导入备份</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th style="width:100px">封面</th><th>名称</th><th>分类</th><th>年份</th><th>操作</th></tr></thead>
+      <tbody id="list"></tbody>
+    </table>
+    </div>
+    <div class="empty" id="empty" style="display:none">还没有案例，先用上方表单添加一个吧。</div>
+  </div>
+
+  
+
+<div class="hint">
+    说明：本后台为纯前端本地版本，数据保存在浏览器 localStorage 中——清空浏览器数据会丢失，请定期「导出备份」。<br>
+    默认管理密码 <b>fonjue2026</b>（仅本机校验）。如需多人协作与真实图片存储，部署时可将数据层替换为 Supabase / 阿里云 OSS 等云服务。
+  </div>
+
+  <footer>
+    <span>© 2026 方觉 Fonjue® 品牌设计工作室</span>
+    <span>ADMIN v1.0</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var KEY='fonjue_cases_v1', PWD_KEY='fonjue_admin_pwd';
+var SEED=[
+ {id:'w1',title:'山雾茶饮',client:'山雾 SHANWU',cat:'餐饮品牌',year:'2026',tags:['品牌识别','包装设计','空间导视'],
+  desc:'为新中式茶饮品牌「山雾」打造完整视觉体系。以秦岭云雾为灵感，标志取山峦之形、茶汤之色，包装采用可降解纸浆与烫银工艺，开业三个月即成为西安本土打卡地标。',hue:18,detail:'西安人喝茶的记忆始于秦岭的山雾。项目初期我们走访了古城 17 家茶馆，发现年轻消费者要的不是传统茶道的仪式感，而是一杯可以带走的、有出处的好茶。\n\n我们以「山」为骨、「雾」为韵设计标志：山形取法碑林石刻的刀锋，雾气用渐变留白表现。包装系统采用可降解纸浆模塑，烫银工艺在雾面上勾出山脊线。\n\n开业三个月，山雾登上大众点评西安茶饮热度榜第一，单店日销突破 1200 杯。'},
+ {id:'w2',title:'秦风造物',client:'秦风造物 QINFENG',cat:'文创品牌',year:'2025',tags:['品牌识别','IP设计','衍生品'],
+  desc:'陕西历史博物馆文创合作品牌。我们从青铜器纹样与秦篆中提取设计语言，打造系列 IP「秦小俑」，衍生文具与潮玩上线首月销量破十万件。',hue:38,detail:'秦风造物是陕西历史博物馆的文创合作品牌，希望让「高冷」的文物走进年轻人的书桌。\n\n我们从青铜器的饕餮纹与秦篆的笔意中提取出「方正、厚重、神秘」三个关键词，设计了可变换 24 种表情的 IP 形象「秦小俑」。\n\n首批文具与潮玩上线首月销量突破 10 万件，秦小俑表情包下载量超 300 万，成为博物馆文创领域的现象级案例。'},
+ {id:'w3',title:'碑林书局',client:'碑林书局 BEILIN',cat:'文化空间',year:'2025',tags:['空间视觉','导视系统','品牌识别'],
+  desc:'毗邻西安碑林博物馆的城市书店。视觉系统以拓片黑白为底、朱砂红为印，导视标识融入碑刻刀法，获评年度最美书店空间设计。',hue:8,detail:'书局与西安碑林博物馆一墙之隔，主人希望它首先是一家书店，其次才是景点。\n\n视觉系统以拓片的黑白灰为底，取朱砂印泥的一点红作为全店唯一的彩色；导视牌采用凿刻工艺，文字取法《九成宫醴泉铭》的间架结构。\n\n开业当年获评「年度最美书店空间」，周末客流量稳定在 3000 人次，书籍销售占比超过 60%。'},
+ {id:'w4',title:'光电 π',client:'光电派 OPTPI',cat:'科技品牌',year:'2026',tags:['品牌识别','动态视觉','官网设计'],
+  desc:'硬科技企业的品牌年轻化改造。以「π」为核心符号构建无限延展的视觉系统，动态标志随数据流实时变化，让 B 端品牌也有了温度。',hue:210,detail:'光电派是一家做激光雷达的硬科技公司，旧品牌形象老化，招聘与融资都受到影响。\n\n我们以无限不循环的 π 为核心符号，构建可动态延展的视觉系统：标志的每一笔对应一个产品参数，随实时数据流产生细微形变。\n\n品牌焕新后，校招简历投递量增长 3 倍，官网停留时长提升 170%，并成功完成 B+ 轮融资。'},
+ {id:'w5',title:'拾榴果汁',client:'拾榴 SHILIU',cat:'包装设计',year:'2024',tags:['包装设计','品牌识别'],
+  desc:'临潼石榴汁品牌包装全案。瓶身曲线取自石榴果实轮廓，标签以手写书法呈现产地故事，上市即成为区域伴手礼销量冠军。',hue:350,detail:'临潼石榴是西安的物产名片，但长期停留在散装论斤卖的阶段，农户利润微薄。\n\n瓶身曲线取自石榴果实的横截面，标签用手写书法讲述果农故事；整箱包装展开后是一幅临潼石榴园长卷插画。\n\n上市首个石榴季销售额突破 800 万元，成为机场伴手礼销量冠军，带动合作社 200 余户果农增收。'},
+ {id:'w6',title:'澄川日料',client:'澄川 CHENGCHUAN',cat:'餐饮品牌',year:'2024',tags:['品牌识别','空间视觉','菜单系统'],
+  desc:'高端日料品牌的东方极简表达。标志以一滴水入川为形，空间视觉沿用「留白即丰盛」的哲学，客单价提升 40% 的同时复购率翻倍。',hue:170,detail:'澄川的主人师从东京寿司名家，回西安后想把「一期一会」的心境带回家乡。\n\n我们以一滴水落入川流的瞬间为标志原形，空间视觉遵循「留白即丰盛」：大量素颜材质，灯光只落在食物上，菜单按节气更换并请书法家题写菜名。\n\n改造后客单价提升 40%，预订排期稳定在两周以上，复购率翻倍。'}
+];
+var imgData=null;
+
+function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(d))return d}catch(e){}return null}
+var cases=load();if(!cases){cases=SEED.slice();persist()}
+function persist(){localStorage.setItem(KEY,JSON.stringify(cases))}
+
+/* ---------- 登录 ---------- */
+function login(){
+  var p=document.getElementById('pwd').value, real=localStorage.getItem(PWD_KEY)||'fonjue2026';
+  if(p===real){sessionStorage.setItem('fonjue_auth','1');document.getElementById('gate').classList.add('off')}
+  else{document.getElementById('err').textContent='密码不正确，请重试';
+    document.getElementById('pwd').value='';document.getElementById('pwd').focus()}
+}
+function logout(){sessionStorage.removeItem('fonjue_auth');location.reload()}
+if(sessionStorage.getItem('fonjue_auth'))document.getElementById('gate').classList.add('off');
+else setTimeout(function(){document.getElementById('pwd').focus()},300);
+
+/* ---------- 图片处理 ---------- */
+function pickImg(inp){
+  var f=inp.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var cv=document.createElement('canvas'),max=1400;
+      var s=Math.min(1,max/Math.max(img.width,img.height));
+      cv.width=img.width*s;cv.height=img.height*s;
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      imgData=cv.toDataURL('image/jpeg',.82);
+      var pv=document.getElementById('f_preview');pv.src=imgData;pv.style.display='block';
+      document.getElementById('f_clearImg').style.display='inline-flex';
+      toast('图片已载入');
+    };
+    img.src=e.target.result;
+  };
+  rd.readAsDataURL(f);
+}
+var galleryData=[];
+function pickGallery(inp){
+  var fs=Array.prototype.slice.call(inp.files);
+  fs.forEach(function(f){
+    var rd=new FileReader();
+    rd.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var cv=document.createElement('canvas'),max=1400;
+        var sc=Math.min(1,max/Math.max(img.width,img.height));
+        cv.width=img.width*sc;cv.height=img.height*sc;
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        galleryData.push(cv.toDataURL('image/jpeg',.82));
+        renderGallery();
+      };
+      img.src=e.target.result;
+    };
+    rd.readAsDataURL(f);
+  });
+  inp.value='';
+}
+function renderGallery(){
+  var box=document.getElementById('g_thumbs');box.innerHTML='';
+  galleryData.forEach(function(src,i){
+    var w=document.createElement('div');
+    w.style.cssText='position:relative;width:86px';
+    w.innerHTML='<img src="'+src+'" style="width:86px;height:60px;object-fit:cover;border-radius:4px;display:block;background:var(--card)">'
+     +'<button type="button" onclick="removeGallery('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:#b3261e;color:#fff;font-size:11px;line-height:20px;cursor:pointer">✕</button>';
+    box.appendChild(w);
+  });
+}
+function removeGallery(i){galleryData.splice(i,1);renderGallery()}
+function clearImg(){imgData=null;document.getElementById('f_preview').style.display='none';
+  document.getElementById('f_clearImg').style.display='none';document.getElementById('f_img').value=''}
+
+/* ---------- 分类联动 ---------- */
+document.getElementById('f_cat').addEventListener('change',function(){
+  document.getElementById('newCatBox').style.display=this.value==='__new'?'block':'none';
+});
+
+/* ---------- 保存 ---------- */
+function saveCase(){
+  var t=document.getElementById('f_title').value.trim();
+  if(!t){toast('请填写案例名称');return}
+  var catSel=document.getElementById('f_cat').value;
+  var cat=catSel==='__new'?document.getElementById('f_newcat').value.trim():catSel;
+  if(!cat){toast('请填写新分类名称');return}
+  var id=document.getElementById('f_id').value;
+  var obj={
+    id:id||('w'+Date.now()),
+    title:t,
+    client:document.getElementById('f_client').value.trim(),
+    year:document.getElementById('f_year').value.trim()||String(new Date().getFullYear()),
+    cat:cat,
+    tags:document.getElementById('f_tags').value.split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean),
+    desc:document.getElementById('f_desc').value.trim(),
+    detail:document.getElementById('f_detail').value.trim(),
+    gallery:galleryData.slice(),
+    img:imgData
+  };
+  var idx=-1;cases.forEach(function(c,i){if(c.id===obj.id)idx=i});
+  if(idx>=0){var old=cases[idx];obj.hue=old.hue;cases[idx]=obj;toast('案例已更新')}
+  else{obj.hue=Math.floor(Math.random()*360);cases.push(obj);toast('案例已添加')}
+  persist();resetForm();
+}
+/* ---------- 站头背景上传 ---------- */
+var BG_KEYS=[['fonjue_bg_light','浅色模式 · 横屏'],['fonjue_bg_dark','深色模式 · 横屏'],
+             ['fonjue_bg_light_v','浅色模式 · 竖屏'],['fonjue_bg_dark_v','深色模式 · 竖屏']];
+function renderBgRows(){
+  var box=document.getElementById('bgRows');if(!box)return;
+  box.innerHTML='';
+  BG_KEYS.forEach(function(kv){
+    var data=null;try{data=localStorage.getItem(kv[0])}catch(e){}
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap';
+    row.innerHTML='<div style="min-width:150px;font-size:13px">'+kv[1]+'</div>'
+     +(data?'<img src="'+data+'" style="width:120px;height:70px;object-fit:cover;border-radius:4px;background:var(--card)">':'<span style="font-size:12px;color:var(--muted)">内置底图</span>')
+     +'<input type="file" accept="image/*" style="display:none" id="bg_'+kv[0]+'">'
+     +'<button class="btn btn-g" type="button" onclick="document.getElementById(\'bg_'+kv[0]+'\').click()">上传</button>'
+     +(data?'<button class="btn btn-x" type="button" onclick="bgRemove(\''+kv[0]+'\')">移除</button>':'')
+     +'<span style="font-size:11px;color:var(--muted)">'+(data?'已自定义':'使用内置')+'</span>';
+    box.appendChild(row);
+    var inp=document.getElementById('bg_'+kv[0]);
+    inp.onchange=(function(key){return function(){bgUpload(key,this)}})(kv[0]);
+  });
+}
+function bgUpload(key,inp){
+  var f=inp.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){var img=new Image();
+    img.onload=function(){
+      var cv=document.createElement('canvas'),mx=2000;
+      var sc=Math.min(1,mx/Math.max(img.width,img.height));
+      cv.width=img.width*sc;cv.height=img.height*sc;
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      try{localStorage.setItem(key,cv.toDataURL('image/jpeg',.85));toast('背景已保存，回主页刷新查看')}
+      catch(err){toast('图片过大，存储失败，请压缩后再传')}
+      renderBgRows();
+    };
+    img.src=e.target.result};
+  rd.readAsDataURL(f);
+  inp.value='';
+}
+function bgRemove(key){
+  if(!confirm('恢复为内置底图？'))return;
+  localStorage.removeItem(key);renderBgRows();toast('已恢复内置底图');
+}
+/* 二维码上传（方形预览） */
+var QR_KEYS=[['fonjue_qr_xhs','小红书二维码'],['fonjue_qr_wx','微信公众号二维码']];
+function renderQrRows(){
+  var box=document.getElementById('qrRows');if(!box)return;
+  box.innerHTML='';
+  QR_KEYS.forEach(function(kv){
+    var data=null;try{data=localStorage.getItem(kv[0])}catch(e){}
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap';
+    row.innerHTML='<div style="min-width:150px;font-size:13px">'+kv[1]+'</div>'
+     +(data?'<img src="'+data+'" style="width:70px;height:70px;object-fit:contain;border-radius:6px;background:#fff;padding:4px">':'<span style="font-size:12px;color:var(--muted)">占位二维码</span>')
+     +'<input type="file" accept="image/*" style="display:none" id="bg_'+kv[0]+'">'
+     +'<button class="btn btn-g" type="button" onclick="document.getElementById(\'bg_'+kv[0]+'\').click()">上传</button>'
+     +(data?'<button class="btn btn-x" type="button" onclick="bgRemove(\''+kv[0]+'\')">移除</button>':'')
+     +'<span style="font-size:11px;color:var(--muted)">'+(data?'已自定义':'使用占位')+'</span>';
+    box.appendChild(row);
+    var inp=document.getElementById('bg_'+kv[0]);
+    inp.onchange=(function(key){return function(){bgUpload(key,this)}})(kv[0]);
+  });
+}
+function savePhone(){
+  var v=document.getElementById('adPhone').value.trim();
+  if(v)localStorage.setItem('fonjue_phone',v);else localStorage.removeItem('fonjue_phone');
+  toast('电话已保存');
+}
+function saveEmail(){
+  var v=document.getElementById('adEmail').value.trim();
+  if(v)localStorage.setItem('fonjue_email',v);else localStorage.removeItem('fonjue_email');
+  toast('邮箱已保存');
+}
+try{var _pv=localStorage.getItem('fonjue_phone');if(_pv)document.getElementById('adPhone').value=_pv;}catch(e){}
+try{var _ev=localStorage.getItem('fonjue_email');if(_ev)document.getElementById('adEmail').value=_ev;}catch(e){}
+renderQrRows();
+renderBgRows();
+render();
+
+/* ---------- 编辑/删除/排序 ---------- */
+
+/* 站点文字保存 */
+
+
+
+
+function editCase(id){
+ try{
+  var c=null;cases.forEach(function(x){if(x.id===id)c=x});
+  if(!c){toast('未找到该案例，请刷新后重试');return;}
+  document.getElementById('formTitle').textContent='✎ 编辑案例：'+c.title;
+  document.getElementById('f_id').value=c.id;
+  document.getElementById('f_title').value=c.title;
+  document.getElementById('f_client').value=c.client||'';
+  document.getElementById('f_year').value=c.year||'';
+  var sel=document.getElementById('f_cat'),hasOpt=false;
+  for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===c.cat){sel.value=c.cat;hasOpt=true}
+  if(!hasOpt&&c.cat){var o=document.createElement('option');o.value=c.cat;o.textContent=c.cat;sel.insertBefore(o,sel.lastChild);sel.value=c.cat}
+  document.getElementById('f_tags').value=(c.tags||[]).join(', ');
+  document.getElementById('f_desc').value=c.desc||'';
+  document.getElementById('f_detail').value=c.detail||'';
+  galleryData=(c.gallery||[]).slice();renderGallery();
+  imgData=c.img||null;
+  if(imgData){var pv=document.getElementById('f_preview');pv.src=imgData;pv.style.display='block';
+    document.getElementById('f_clearImg').style.display='inline-flex'}
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('已载入「'+c.title+'」，可以开始编辑');
+ }catch(e){toast('载入失败：'+e.message);}
+}
+function delCase(id){
+  if(!confirm('确定删除这个案例吗？删除后不可恢复。'))return;
+  cases=cases.filter(function(c){return c.id!==id});
+  persist();render();toast('已删除');
+}
+function move(id,dir){
+  var i=-1;cases.forEach(function(c,k){if(c.id===id)i=k});
+  var j=i+dir;if(j<0||j>=cases.length)return;
+  var t=cases[i];cases[i]=cases[j];cases[j]=t;
+  persist();render();
+}
+function resetForm(){
+  ['f_id','f_title','f_client','f_year','f_newcat','f_tags','f_desc','f_detail'].forEach(function(x){document.getElementById(x).value=''});
+  document.getElementById('f_cat').selectedIndex=0;
+  document.getElementById('newCatBox').style.display='none';
+  document.getElementById('formTitle').textContent='＋ 新增案例';
+  clearImg();galleryData=[];renderGallery();
+}
+
+/* ---------- 导入导出 ---------- */
+function exportJSON(){
+  var blob=new Blob([JSON.stringify(cases,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='fonjue-cases-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast('备份已导出');
+}
+function importJSON(inp){
+  var f=inp.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var d=JSON.parse(e.target.result);
+      if(!Array.isArray(d))throw 0;
+      if(!confirm('导入 '+d.length+' 个案例将覆盖当前全部数据，确定吗？'))return;
+      cases=d;persist();render();toast('导入成功');
+    }catch(err){toast('文件格式不正确')}
+    inp.value='';
+  };
+  rd.readAsText(f);
+}
+
+/* ---------- 封面占位 ---------- */
+function phCover(c,i){
+  if(c.img)return c.img;
+  var h=c.hue||20;
+  var ch=(c.title||'方').replace(/[^一-龥]/g,'').charAt(0)||'方';
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140"><rect width="200" height="140" fill="hsl('+h+',30%,87%)"/><circle cx="'+(40+(i*37)%120)+'" cy="'+(30+(i*23)%60)+'" r="26" fill="hsl('+h+',60%,52%)"/><text x="100" y="86" font-family="serif" font-weight="900" font-size="44" fill="hsl('+h+',40%,22%)" text-anchor="middle">'+ch+'</text></svg>';
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+}
+
+/* ---------- 渲染列表 ---------- */
+function render(){
+  var tb=document.getElementById('list');tb.innerHTML='';
+  document.getElementById('cnt').textContent=cases.length;
+  document.getElementById('empty').style.display=cases.length?'none':'block';
+  cases.forEach(function(c,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><img class="cover" src="'+phCover(c,i)+'"></td>'
+     +'<td><b style="font-weight:500">'+esc(c.title)+'</b><br><span style="font-size:12px;color:var(--muted)">'+esc(c.client||'')+'</span></td>'
+     +'<td><span class="tag">'+esc(c.cat||'')+'</span></td>'
+     +'<td>'+esc(c.year||'')+'</td>'
+     +'<td class="ops"><button onclick="move(\''+c.id+'\',-1)" title="上移">↑</button>'
+     +'<button onclick="move(\''+c.id+'\',1)" title="下移">↓</button>'
+     +'<button onclick="editCase(\''+c.id+'\')">编辑</button>'
+     +'<button class="del" onclick="delCase(\''+c.id+'\')">删除</button></td>';
+    tb.appendChild(tr);
+  });
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})}
+function toast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},2200);
+}
+render();
+
+/* ---------- 合作品牌 Logo（8 槽位，主站一行展示） ---------- */
+
+/* ---------- 合作品牌 Logo（不限数量） ---------- */
+var PL_KEY='fonjue_partner_logos';
+function loadPL(){try{var d=JSON.parse(localStorage.getItem(PL_KEY));if(Array.isArray(d))return d}catch(e){}return[]}
+function renderPLL(){
+  var arr=loadPL();var box=document.getElementById('plRows');if(!box)return;
+  box.innerHTML='';
+  var t=document.createElement('div');
+  t.style.cssText='font-size:13px;padding:10px 0 6px';
+  t.textContent='合作品牌 Logo（已传 '+arr.length+' 个，主站每行最多 8 个、多了自动换行，自动灰度）';
+  box.appendChild(t);
+  var grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding-bottom:12px';
+  arr.forEach(function(src,i){
+    var cell=document.createElement('div');
+    cell.style.cssText='border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center';
+    var img=document.createElement('img');
+    img.src=src;img.style.cssText='width:100%;height:56px;object-fit:contain';
+    cell.appendChild(img);
+    var cap=document.createElement('div');
+    cap.style.cssText='font-size:11px;color:var(--muted);margin:6px 0';
+    cap.textContent='第 '+(i+1)+' 个';
+    cell.appendChild(cap);
+    var ops=document.createElement('div');
+    [['↑',function(){movePL(i,-1)},'btn btn-g'],['↓',function(){movePL(i,1)},'btn btn-g'],['删除',function(){delPL(i)},'btn btn-x']].forEach(function(b){
+      var btn=document.createElement('button');
+      btn.className=b[2];btn.type='button';
+      btn.style.cssText='padding:6px 10px;font-size:12px;margin-right:4px';
+      btn.textContent=b[0];btn.onclick=b[1];
+      ops.appendChild(btn);
+    });
+    cell.appendChild(ops);
+    grid.appendChild(cell);
+  });
+  box.appendChild(grid);
+  var add=document.createElement('button');
+  add.className='btn btn-g';add.type='button';add.textContent='＋ 添加 Logo（不限数量）';
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.style.display='none';inp.id='pl_new';
+  inp.onchange=function(){upPLLNew(inp)};
+  add.onclick=function(){inp.click()};
+  box.appendChild(add);box.appendChild(inp);
+}
+function upPLLNew(inp){
+  var f=inp.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){var img=new Image();
+    img.onload=function(){
+      var cv=document.createElement('canvas'),mx=600;
+      var sc=Math.min(1,mx/Math.max(img.width,img.height));
+      cv.width=img.width*sc;cv.height=img.height*sc;
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      var arr=loadPL();arr.push(cv.toDataURL('image/png'));
+      localStorage.setItem(PL_KEY,JSON.stringify(arr));
+      toast('已添加（共 '+arr.length+' 个），回主站刷新查看');renderPLL();
+    };
+    img.src=e.target.result};
+  rd.readAsDataURL(f);
+  inp.value='';
+}
+function movePL(i,dir){
+  var arr=loadPL(),j=i+dir;
+  if(j<0||j>=arr.length)return;
+  var t=arr[i];arr[i]=arr[j];arr[j]=t;
+  localStorage.setItem(PL_KEY,JSON.stringify(arr));renderPLL();
+}
+function delPL(i){
+  if(!confirm('删除第 '+(i+1)+' 个 Logo？'))return;
+  var arr=loadPL();arr.splice(i,1);
+  localStorage.setItem(PL_KEY,JSON.stringify(arr));
+  renderPLL();toast('已删除');
+}
+renderPLL();
+
+
+
+/* ---------- 团队介绍管理 ---------- */
+var FS_KEY='fonjue_settings';
+function loadFS(){try{var d=JSON.parse(localStorage.getItem(FS_KEY));if(d&&typeof d==='object')return d}catch(e){}return{}}
+function getTeam(){var st=loadFS();return Array.isArray(st.team)?st.team:[]}
+function setTeam(arr){var st=loadFS();st.team=arr;localStorage.setItem(FS_KEY,JSON.stringify(st));toast('团队已保存，回主站刷新查看')}
+function renderTeamA(){
+  var arr=getTeam();var box=document.getElementById('teamRows');if(!box)return;
+  box.innerHTML='';
+  if(!arr.length){box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0 14px">还没有成员，点击下方按钮添加。</div>';return;}
+  arr.forEach(function(m,i){
+    var row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:64px 1fr 1.4fr 2fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)';
+    var av=document.createElement('img');
+    av.src=m.img||'';av.title='点击更换头像';
+    av.style.cssText='width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--card);cursor:pointer';
+    av.onerror=function(){this.style.opacity=.15};
+    var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.style.display='none';
+    av.onclick=function(){inp.click()};
+    inp.onchange=function(){pickTeamImg(i,inp)};
+    function field(ph,val,fn){
+      var el=document.createElement('input');
+      el.type='text';el.placeholder=ph;el.value=val||'';
+      el.style.cssText='padding:9px 10px;font-size:13px';
+      el.onchange=function(){var a=getTeam();a[i][fn]=this.value;setTeam(a)};
+      return el;
+    }
+    var ops=document.createElement('div');
+    [['↑',function(){moveTeam(i,-1)}],['↓',function(){moveTeam(i,1)}],['✕',function(){delTeam(i)}]].forEach(function(b){
+      var btn=document.createElement('button');
+      btn.className='btn btn-g';btn.type='button';btn.textContent=b[0];
+      btn.style.cssText='padding:6px 10px;font-size:12px;margin-right:4px';
+      btn.onclick=b[1];ops.appendChild(btn);
+    });
+    row.appendChild(av);row.appendChild(inp);
+    row.appendChild(field('姓名',m.name,'name'));
+    row.appendChild(field('职位（中英文均可）',m.role,'role'));
+    row.appendChild(field('一句话简介',m.bio,'bio'));
+    row.appendChild(ops);
+    box.appendChild(row);
+  });
+}
+function addTeam(){
+  var arr=getTeam();arr.push({name:'',role:'',bio:'',img:''});setTeam(arr);renderTeamA();
+}
+function delTeam(i){
+  if(!confirm('删除该成员？'))return;
+  var arr=getTeam();arr.splice(i,1);setTeam(arr);renderTeamA();
+}
+function moveTeam(i,dir){
+  var arr=getTeam(),j=i+dir;if(j<0||j>=arr.length)return;
+  var t=arr[i];arr[i]=arr[j];arr[j]=t;setTeam(arr);renderTeamA();
+}
+function pickTeamImg(i,inp){
+  var f=inp.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){var img=new Image();
+    img.onload=function(){
+      var cv=document.createElement('canvas'),mx=400;
+      var sc=Math.min(1,mx/Math.max(img.width,img.height));
+      cv.width=img.width*sc;cv.height=img.height*sc;
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      var arr=getTeam();arr[i].img=cv.toDataURL('image/jpeg',.85);setTeam(arr);renderTeamA();
+    };img.src=e.target.result};
+  rd.readAsDataURL(f);inp.value='';
+}
+renderTeamA();
+
+
+/* ---------- 导出整站：把当前数据内嵌进 index.html ---------- */
+var FJ_KEYS=['fonjue_cases_v1','fonjue_settings','fonjue_partner_logos','fonjue_bg_light','fonjue_bg_dark','fonjue_bg_light_v','fonjue_bg_dark_v','fonjue_qr_xhs','fonjue_qr_wx','fonjue_phone','fonjue_email'];
+function buildSiteHTML(idxText){
+  var data={};
+  FJ_KEYS.forEach(function(k){var v=null;try{v=localStorage.getItem(k)}catch(e){}if(v!=null)data[k]=v});
+  var tag='<script>window.__FJ_PRELOAD='+JSON.stringify(data)+';<\/script>';
+  if(idxText.indexOf('<head')>=0){
+    return idxText.replace(/<head[^>]*>/,function(m){return m+'\n'+tag});
+  }
+  return tag+'\n'+idxText;
+}
+function exportSite(){
+  toast('正在生成整站文件…');
+  fetch('index.html',{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw 0;return r.text();
+  }).then(function(t){
+    saveSiteFile(buildSiteHTML(t));
+  }).catch(function(){
+    // 本地双击打开时 fetch 不可用 → 手动选择 index.html
+    var inp=document.createElement('input');inp.type='file';inp.accept='.html';
+    inp.onchange=function(){
+      var f=inp.files[0];if(!f)return;
+      var rd=new FileReader();
+      rd.onload=function(e){saveSiteFile(buildSiteHTML(e.target.result))};
+      rd.readAsText(f);
+    };
+    inp.click();
+  });
+}
+function saveSiteFile(html){
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var aEl=document.createElement('a');aEl.href=URL.createObjectURL(blob);
+  aEl.download='index.html';aEl.click();
+  toast('已导出 index.html → 上传到 GitHub 替换旧文件，所有人即可看到');
+}
+
+</script>
+</body>
+</html>
